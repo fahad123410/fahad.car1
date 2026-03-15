@@ -658,11 +658,8 @@ def _init_db_if_possible():
                 
             # Add default cars if none exist
             if Car.query.count() == 0:
-                default_cars = [
-                    Car(name='Toyota', model='Premio', price_per_day=15000, km_per_day=100, category='luxury', transmission='automatic', seats=5, fuel_type='petrol', available=True),
-                    Car(name='Honda', model='Vezel', price_per_day=12000, km_per_day=100, category='suv', transmission='automatic', seats=5, fuel_type='hybrid', available=True),
-                    Car(name='Nissan', model='Sunny', price_per_day=8000, km_per_day=100, category='sedan', transmission='automatic', seats=5, fuel_type='petrol', available=True),
-                ]
+                default_cars = []
+                    
                 for car in default_cars:
                     db.session.add(car)
                 db.session.commit()
