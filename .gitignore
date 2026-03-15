@@ -1,0 +1,78 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Database
+*.db
+*.db-journal
+instance/
+
+# Environment variables
+.env
+*.env
+
+# Firebase credentials - IMPORTANT: Don't commit this!
+serviceAccountKey.json
+*-firebase-adminsdk-*.json
+
+# Uploads
+uploads/
+uploads_temp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flask
+instance/
+.webassets-cache
+
+# Logs
+logs/
+*.log
+
+# Coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask-Bootstrap
+bower_components
+
+# Flask-Assets
+.assets
+
+# Vercel
+.vercel
