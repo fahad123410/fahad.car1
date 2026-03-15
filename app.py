@@ -277,7 +277,15 @@ def _firestore_delete(collection: str, doc_id: str):
         logger.debug(f"Firestore delete successful: {collection}/{doc_id}")
     except Exception as e:
         logger.error(f"Firestore delete failed for {collection}/{doc_id}: {e}")
-
+# ADD THIS NEW FUNCTION HERE
+def init_firebase_first():
+    """Initialize Firebase first and restore data"""
+    if app.config.get("FIREBASE_ENABLED"):
+        client = _get_firestore_client()
+        if client:
+            # Force restore from Firebase on every instance start
+            _restore_from_firestore_if_empty()
+            logger.info("Firebase sync enabled - data will persist")
 # ==============================
 # HELPER FUNCTIONS FOR SRI LANKAN FORMAT
 # ==============================
