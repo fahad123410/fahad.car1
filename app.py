@@ -277,7 +277,8 @@ def _firestore_delete(collection: str, doc_id: str):
         logger.debug(f"Firestore delete successful: {collection}/{doc_id}")
     except Exception as e:
         logger.error(f"Firestore delete failed for {collection}/{doc_id}: {e}")
-# ADD THIS NEW FUNCTION HERE
+
+
 def init_firebase_first():
     """Initialize Firebase first and restore data"""
     if app.config.get("FIREBASE_ENABLED"):
@@ -286,6 +287,31 @@ def init_firebase_first():
             # Force restore from Firebase on every instance start
             _restore_from_firestore_if_empty()
             logger.info("Firebase sync enabled - data will persist")
+
+
+def debug_firestore_cars():
+    """Debug function to check Firestore cars collection"""
+    if not app.config.get("FIREBASE_ENABLED"):
+        logger.info("Firebase not enabled")
+        return
+    
+    client = _get_firestore_client()
+    if not client:
+        logger.error("No Firestore client")
+        return
+    
+    try:
+        cars_collection = _firestore_collection("cars")
+        docs = client.collection(cars_collection).limit(10).stream()
+        car_count = 0
+        for doc in docs:
+            car_count += 1
+            logger.info(f"Firestore car {doc.id}: {doc.to_dict()}")
+        logger.info(f"Found {car_count} cars in Firestore")
+    except Exception as e:
+        logger.error(f"Error checking Firestore cars: {e}")
+
+
 # ==============================
 # HELPER FUNCTIONS FOR SRI LANKAN FORMAT
 # ==============================
@@ -554,9 +580,10 @@ def _restore_from_firestore_if_empty():
     for model_cls, coll_name in mappings:
         # If table already has rows, don't touch it.
         if model_cls.query.count() > 0:
-            logger.debug(f"Table {coll_name} already has data, skipping restore")
+            logger.debug(f"Table {coll_name} already has {model_cls.query.count()} rows, skipping restore")
             continue
 
+        logger.info(f"Attempting to restore {coll_name} from Firestore...")
         try:
             docs = client.collection(_firestore_collection(coll_name)).stream()
             instances = []
@@ -576,6 +603,12 @@ def _restore_from_firestore_if_empty():
                     data["id"] = doc_id_int
 
                 try:
+                    # Remove any fields that might cause issues
+                    if '_model' in data:
+                        del data['_model']
+                    if '_mirrored_at' in data:
+                        del data['_mirrored_at']
+                    
                     instances.append(model_cls(**data))
                 except Exception as e:
                     logger.exception(
@@ -588,6 +621,8 @@ def _restore_from_firestore_if_empty():
                 logger.info(
                     f"Restored {len(instances)} {coll_name} record(s) from Firestore."
                 )
+            else:
+                logger.info(f"No {coll_name} records found in Firestore to restore.")
         except Exception as e:
             logger.exception(f"Failed to read collection {coll_name} from Firestore: {e}")
 
@@ -614,6 +649,7 @@ def _init_db_if_possible():
             # First, if Firestore is enabled, try to restore all tables
             # from Firestore when they are empty (fresh Vercel instance).
             if app.config.get("FIREBASE_ENABLED"):
+                logger.info("Firebase enabled, attempting to restore from Firestore...")
                 _restore_from_firestore_if_empty()
 
             # Now seed minimal defaults ONLY if still empty AND
@@ -656,14 +692,61 @@ def _init_db_if_possible():
                 db.session.commit()
                 logger.info("Default hero added to database")
                 
-            # Add default cars if none exist
-            if Car.query.count() == 0:
-                default_cars = []
-                    
+            # IMPORTANT FIX: Check if cars exist, if not, add default cars
+            # This ensures there's always at least some cars to display
+            car_count = Car.query.count()
+            logger.info(f"Current car count in database: {car_count}")
+            
+            if car_count == 0:
+                logger.info("No cars found in database, adding default cars...")
+                default_cars = [
+                    Car(
+                        name='Toyota', 
+                        model='Premio', 
+                        price_per_day=15000, 
+                        km_per_day=100, 
+                        category='luxury', 
+                        transmission='automatic', 
+                        seats=5, 
+                        fuel_type='petrol', 
+                        available=True,
+                        image='default_car.jpg'
+                    ),
+                    Car(
+                        name='Honda', 
+                        model='Vezel', 
+                        price_per_day=12000, 
+                        km_per_day=100, 
+                        category='suv', 
+                        transmission='automatic', 
+                        seats=5, 
+                        fuel_type='hybrid', 
+                        available=True,
+                        image='default_car.jpg'
+                    ),
+                    Car(
+                        name='Nissan', 
+                        model='Sunny', 
+                        price_per_day=8000, 
+                        km_per_day=100, 
+                        category='sedan', 
+                        transmission='automatic', 
+                        seats=5, 
+                        fuel_type='petrol', 
+                        available=True,
+                        image='default_car.jpg'
+                    ),
+                ]
+                
                 for car in default_cars:
                     db.session.add(car)
                 db.session.commit()
-                logger.info("Default cars added to database")
+                logger.info(f"Added {len(default_cars)} default cars to database")
+            
+            # Debug: Check Firestore cars
+            if app.config.get("FIREBASE_ENABLED"):
+                debug_firestore_cars()
+                
     except Exception as e:
         logger.exception(f"Database initialization failed: {e}")
 
