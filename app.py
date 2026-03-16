@@ -98,10 +98,10 @@ class Config:
 
     # Firebase (optional): when enabled, SQL data is mirrored to Firestore
     # Provide either FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_SERVICE_ACCOUNT_PATH.
-    FIREBASE_PROJECT_ID = os.environ.get("FIREBASE_PROJECT_ID", "")
+    FIREBASE_PROJECT_ID = os.environ.get("FIREBASE_PROJECT_ID", "rentel-77c74")
     FIREBASE_SERVICE_ACCOUNT_JSON = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON", "")
     FIREBASE_FIRESTORE_PREFIX = os.environ.get("FIREBASE_FIRESTORE_PREFIX", "premium_rentals")
-    FIREBASE_STORAGE_BUCKET = os.environ.get("FIREBASE_STORAGE_BUCKET", f"{FIREBASE_PROJECT_ID}.appspot.com")
+    FIREBASE_STORAGE_BUCKET = os.environ.get("FIREBASE_STORAGE_BUCKET", "rentel-77c74.firebasestorage.app")
     _DEFAULT_FIREBASE_SA_PATH = os.path.join(
         BASE_DIR,
         ".env",
