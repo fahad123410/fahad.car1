@@ -189,25 +189,40 @@ def _get_firestore_client():
             sa_json = (app.config.get("FIREBASE_SERVICE_ACCOUNT_JSON") or "").strip()
             sa_path = (app.config.get("FIREBASE_SERVICE_ACCOUNT_PATH") or "").strip()
             
+            # ADD DEBUG PRINT HERE
+            print("="*50)
+            print("DEBUG: Firebase Service Account Info")
+            print(f"JSON present: {'Yes' if sa_json else 'No'}")
+            print(f"JSON length: {len(sa_json) if sa_json else 0}")
+            print(f"Path: {sa_path}")
+            print(f"Path exists: {os.path.exists(sa_path) if sa_path else False}")
+            print("="*50)
+            
             cred = None
             if sa_json:
                 import json
                 try:
+                    # Try to parse first few chars to see if it's valid
+                    print(f"JSON starts with: {sa_json[:50]}...")
                     cred = firebase_credentials.Certificate(json.loads(sa_json))
                     logger.info("Using Firebase credentials from JSON string")
                 except Exception as e:
                     logger.error(f"Failed to parse Firebase JSON string: {e}")
+                    print(f"JSON PARSE ERROR: {e}")
             elif sa_path and os.path.exists(sa_path):
                 try:
                     cred = firebase_credentials.Certificate(sa_path)
                     logger.info(f"Using Firebase credentials from file: {sa_path}")
                 except Exception as e:
                     logger.error(f"Failed to load Firebase credentials from file: {e}")
+                    print(f"FILE LOAD ERROR: {e}")
             else:
                 logger.warning("Firebase enabled but no valid service account provided.")
+                print("ERROR: No valid service account credentials found!")
                 return None
 
             if not cred:
+                print("ERROR: cred is None")
                 return None
 
             options = {}
@@ -218,21 +233,28 @@ def _get_firestore_client():
             
             _firebase_app = firebase_admin.initialize_app(cred, options=options or None)
             logger.info("Firebase app initialized successfully")
+            print("SUCCESS: Firebase app initialized!")
 
         _firestore_client = firebase_firestore.client()
         logger.info("Firebase Firestore client initialized.")
+        print("SUCCESS: Firestore client initialized!")
         
         # Initialize Firebase Storage if available
         if firebase_storage:
             try:
                 _firebase_bucket = firebase_storage.bucket()
                 logger.info("Firebase Storage bucket initialized.")
+                print(f"SUCCESS: Storage bucket initialized: {_firebase_bucket}")
             except Exception as e:
                 logger.warning(f"Firebase Storage initialization failed: {e}")
+                print(f"STORAGE ERROR: {e}")
         
         return _firestore_client
     except Exception as e:
         logger.exception(f"Failed to initialize Firebase Firestore client: {e}")
+        print(f"FATAL ERROR: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
